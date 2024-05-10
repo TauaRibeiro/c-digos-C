@@ -9,7 +9,7 @@ int main(){
     
 	int num;
 	
-	printf("Digite o número que irá calcular o fatorial: ");
+	printf("Digite o número que irá calcular o somatório: ");
 	scanf("%d", &num);
 	printf("O somátorio será: %d", somatorio(num));
 	return 0;
