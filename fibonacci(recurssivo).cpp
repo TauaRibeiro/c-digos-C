@@ -16,15 +16,15 @@ int main() {
     return 0;
 }
 
-int conta = 0, anterior = 0, atual = 0, temp;
+int conta = 1, anterior = 0, atual = 0, temp;
 void fibo(int elementos)
 {
     if(conta <= elementos){
-        if(conta == 0){
+        if(conta == 1){
             printf("%d... ", atual);
             ++atual;
         }
-        else if(conta == 1){
+        else if(conta == 2){
             printf("%d... ", atual);
         }
         else{
