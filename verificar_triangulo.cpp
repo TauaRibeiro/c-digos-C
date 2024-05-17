@@ -1,29 +1,40 @@
 #include <stdio.h>
-#include <locale.h>
 #include <stdlib.h>
+#include <locale.h>
 
-int verificarTriangulo(int lados[3]);
-
-int main(){
-    setlocale(LC_ALL, "Portuguese");
-    
-    int lados[3];
-    
-    for(int i = 0; i < 3; i++){
-    	printf("Digite o %d° lado: ", i+1);
-    	scanf("%d" , &lados[i]);
-	}
-	
-	printf("%i", verificarTriangulo(lados));
-	
-	return 0;
-}
-
-int verificarTriangulo(int lados[3]){
+void triangulo(float lados[3]){
 	if(lados[0] < lados[1] + lados[2] && lados[1] < lados[2] + lados[0] && lados[3] < lados[0] + lados[1]){
-		return 1;
+		
+		if(lados[0] == lados[1] && lados[0] == lados[2]){
+		printf("É equilátero.");
+		}
+		
+		else if(lados[0] == lados[1] || lados[0] == lados[2] || lados[1] == lados[2]){
+			printf("É isóceles.");
+		}
+		
+		else{
+			printf("É escaleno.");
+		}
 	}
 	else{
-		return 0;
+		printf("Não é um triângulo...");;
 	}
+	
+}
+
+int main(){
+    system("cls");
+    setlocale(LC_ALL, "PORTUGUESE");
+    
+    float lados[3];
+    
+    for(int i = 0; i < 3; i++){
+    	printf("Digite o valor do %d° lado: ", i+1);
+    	scanf("%f", &lados[i]);
+	}
+	
+	triangulo(lados);
+    
+    return 0;
 }
