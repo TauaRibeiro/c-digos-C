@@ -1,4 +1,4 @@
-//Vai ser necessário criar um arquivo txt chamado 'arq', caso contrário não irá funcionar;
+//Vai ser necessário criar um arquivo txt antes, caso contrário não irá funcionar;
 #include <stdio.h>
 #include <locale.h>
 #include <stdlib.h>
