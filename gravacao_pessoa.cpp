@@ -1,116 +1,161 @@
-/*Será necessário criar antes um arquivo que contenha os seguintes dados na mesma linha
-nome(podendo ser completo) data de nascimento(MM/AAAA)*/
+//Ainda em construção
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <ctype.h>
 #include <locale.h>
+#include <time.h>
+#include <string.h>
 
-void abrir(FILE **a, const char *tipo);
-void gravar(FILE *l, FILE **g);
+struct agenda{
+    int mes, ano;
+    char telefone[15], nome[];
+};
+
+int leitura(FILE **a, struct agenda **c);
+void cadastro(struct agenda **c, int indice);
+void remocao(struct arquivo[]);
+void linha(const char *tipo, int tamanho);
 
 int main(){
     system("cls");
     setlocale(LC_ALL, "Portuguese");
+
+    FILE *arquivo;
+    struct agenda *contato;
+    int decisao, qtd_contatos;
+    int fim = 0;
+
+    arquivo = fopen("gravacao.txt", "r");
     
-    FILE *leitura, *gravacao;
+    if(arquivo == NULL){
+        fclose(arquivo);
 
-    printf("Digite o nome do arquivo de leitura(exemplo.txt): ");
-    abrir(&leitura, "r");
-    
-    printf("Digite o nome do arquivo de gravação(exemplo.txt): ");
-    abrir(&gravacao, "w");
+        arquivo = fopen("gravacao.txt", "w");
+        
+        fprintf(arquivo, "%d", 1);
 
-    gravar(leitura, &gravacao);
-
-    printf("Gravação feita com sucesso!!");
-
-    fclose(leitura);
-    fclose(gravacao);
-    return 1;
-}
-
-void abrir(FILE **a, const char *tipo){
-    char *nome = (char *)malloc(50*sizeof(char));
-    char letra;
-    int tamanho = 0;
-
-    if(nome == NULL){
-        printf("ERRO!! Não possível alocar memória...");
-
-        free(nome);
-        exit(0);
+        contato = (struct agenda *)malloc(sizeof(struct agenda));
+    }
+    else{
+        qtd_contatos = leitura(&arquivo, &contato);
     }
 
-    while((letra = getchar()) != '\n'){
-        nome[tamanho++] = letra;
+    fclose(arquivo);
 
-        if(tamanho >= 50){
-            nome = (char *)realloc(nome, (tamanho+1)*sizeof(char));
+    do{
+        do{
+            linha("=-", 25);
+            printf("ESCOLHA UMA DAS OPÇÕES ABAIXO:");
+            linha("-", 30);
+            printf("1- Inserir contato;\n2- Remover contato;\n3- Pesquisar contato;\n");
+            printf("4- Listar contatos;\n5- Imprimir aniversário do mês;");
+            linha("-", 30);
+            printf("Digite o número da opção desejada: ");
+            scanf("%d", &decisao);
 
-            if(nome == NULL){
-                printf("ERRO!! Não foi possível realocar mais memória...");
+            if(decisao <= 5 && decisao >= 1){
+                linha("=-", 25);
 
-                free(nome);
-                exit(0);
+                break;
             }
-        }
-    }
 
-    if(tamanho < 49){
-        nome = (char *)realloc(nome, tamanho*sizeof(char));
+            system("cls");
 
-        if(nome == NULL){
-            printf("ERRO!! Não foi possível realocar a memória exata....");
-
-            free(nome);
-            exit(0);
-        }
-    }
-
-    nome[tamanho] = '\0';
-
-    (*a) = fopen(nome, tipo);
-
-    if((*a) == NULL){
-        printf("ERRO!! Não foi possível abrir o arquivo \'%s\'...", nome);
-
-        free(nome);
+            printf("Escolha inválida!!! Tente novamente;");
+        }while(1);
         
-        exit(0);
-    }
+        switch(decisao){
+            case 1:
+                cadastro(&arquivo, &contato, qtd_contatos-1);
+                
+                qtd_contatos++;
 
-    free(nome);
+                printf("Cadastro realizado com sucesso!!");
+            break;
+        }
+    }while(fim);
+
+    return 0;
 }
 
-void gravar(FILE *l, FILE **g){
-    time_t tempo;
-    char *nome = (char *)malloc(50*sizeof(char));
-    char caracter;
-    int mes, ano, tamanho = 0;
+void linha(const char *tipo, int tamanho){
+    printf("%c", '\n');
 
-    time(&tempo);
-    
-    fprintf((*g), "%s\n", ctime(&tempo));
-
-    while((caracter = getc(l)) != EOF){
-        if(isdigit(caracter) == 0 && caracter != '\n'){
-            nome[tamanho++] = caracter;
-
-            if(tamanho >= 50){
-                nome = (char *)realloc(nome, (tamanho+1)*sizeof(char));
-            }    
-        }
-        else if(isdigit(caracter) != 0){
-            nome[tamanho] = '\0';
-
-            fscanf(l, "%d/%d", &mes, &ano);
-            fprintf((*g), "NOME: %s\nDATA NASCIMENTO: %.2d/%d\n\n", nome, mes, ano);
-
-            tamanho = 0;
-            free(nome);
-            nome = (char *)malloc(50*sizeof(char)); 
-        }
-        
+    for(int i = 0; i < tamanho; i++){
+        printf(tipo);
     }
+
+    printf("%c", '\n');
 }
+
+void cadastro(struct agenda **c, int indice){
+    int veri_data(int mes, int ano);
+
+    char nome[100], telefone[15];
+    int mes, ano;
+    int achou_erro, erro_telefone, erro_data;
+
+    do{
+        achou_erro = erro_data = erro_telefone = 0;
+
+        linha("-", 30);
+        printf("Digite o nome da pessoa: ");
+        fscanf(stdin ," %99[^\n]", nome);
+
+        fflush(stdin);
+        
+        linha("-", 30);
+        printf("Digite o número de telefone de %s (+55xxxxxxxxxxx): ", nome);
+        fscanf(stdin, " %14[^\n]", telefone);
+
+        fflush(stdin);
+
+        linha("-", 30);
+        printf("Digite o mês e ano qm que %s faz aniversário (mm/aaaa): ", nome);
+        scanf("%2d/%d", &mes, &ano);
+
+        system("cls");
+        
+        if(!veri_data(mes, ano)){
+            achou_erro = erro_data = 1;
+        }
+        if(!(strlen(telefone) == 14)){
+            achou_erro = erro_telefone = 1;
+        }
+
+        if(!achou_erro){
+            break;
+        }
+
+        printf("ERRO!!\n");
+        printf("%s",(erro_data) ? "\nData de aniversário inválida..." : "");
+        printf("%s", (erro_telefone) ? "\nNúmero de telefone inválido..." : "");
+
+    }while(1);
+
+    (*c)[indice].ano = ano;
+    (*c)[indice].mes = mes;
+    strcpy((*c)[indice].nome, nome);
+    strcpy((*c)[indice].telefone, telefone);
+
+    (*c) = (struct agenda *)realloc((*c), (indice+2)*sizeof(struct agenda));
+}
+
+int veri_data(int mes, int ano){
+    time_t t;
+    time(&t);
+    struct tm *tempo = localtime(&t);
+
+    int ano_atual = tempo->tm_year + 1900;
+
+    if(mes > 12 || mes < 1){
+        return 0;
+    }
+    if(ano > ano_atual || ano <= 1824){
+        return 0;
+    }
+
+    return 1;   
+}
+
+int leitura(FILE **a, struct agenda **c){
