@@ -8,11 +8,13 @@
 
 struct agenda{
     int mes, ano;
-    char telefone[15], nome[];
+    char telefone[19], nome[100];
 };
 
-void cadastro(FILE **a, struct agenda **c, int indice);
-void remocao(FILE **a, struct arquivo[]);
+void gravacao(FILE **a, struct agenda *c, int qtd);
+int inicializacao(FILE **a, struct agenda **c);
+void cadastro(struct agenda **c, int indice);
+void remocao(struct agenda **c);
 void linha(const char *tipo, int tamanho);
 
 int main(){
@@ -24,24 +26,7 @@ int main(){
     int decisao, qtd_contatos;
     int fim = 0;
 
-    arquivo = fopen("gravacao.txt", "r");
-    
-    if(arquivo == NULL){
-        fclose(arquivo);
-
-        arquivo = fopen("gravacao.txt", "w");
-        
-        fprintf(arquivo, "%d", 1);
-
-        contato = (struct agenda *)malloc(sizeof(struct agenda));
-    }
-    else{
-        fscanf(arquivo, "%d", &qtd_contatos);
-
-        contato = (struct agenda *)malloc(qtd_contatos*sizeof(struct agenda));
-    }
-
-    fclose(arquivo);
+    qtd_contatos = inicializacao(&arquivo, &contato);
 
     do{
         do{
@@ -67,9 +52,14 @@ int main(){
         
         switch(decisao){
             case 1:
-                cadastro(&arquivo, &contato, qtd_contatos-1);
+                cadastro(&contato, qtd_contatos-1);
+                
+                qtd_contatos++;
+
+                gravacao(&arquivo, contato, qtd_contatos);
 
                 printf("Cadastro realizado com sucesso!!");
+
             break;
         }
     }while(fim);
@@ -87,14 +77,13 @@ void linha(const char *tipo, int tamanho){
     printf("%c", '\n');
 }
 
-void cadastro(FILE **a, struct agenda **c, int indice){
+void cadastro(struct agenda **c, int indice){
     int veri_data(int mes, int ano);
+    int veri_telefone(char telefone[]);
 
-    char nome[100], telefone[15];
+    char nome[100], telefone[20];
     int mes, ano;
     int achou_erro, erro_telefone, erro_data;
-
-    (*a) = fopen("gravacao.txt", "w");
 
     do{
         achou_erro = erro_data = erro_telefone = 0;
@@ -106,21 +95,21 @@ void cadastro(FILE **a, struct agenda **c, int indice){
         fflush(stdin);
         
         linha("-", 30);
-        printf("Digite o número de telefone de %s (+55xxxxxxxxxxx): ", nome);
-        fscanf(stdin, " %14[^\n]", telefone);
+        printf("Digite o número de telefone de %s [(xx) x xxxxxx-xxxx]: ", nome);
+        fscanf(stdin, " %19[^\n]", telefone);
 
         fflush(stdin);
 
         linha("-", 30);
         printf("Digite o mês e ano qm que %s faz aniversário (mm/aaaa): ", nome);
-        scanf("%2d/%d", &mes, &ano);
+        scanf("%d/%d", &mes, &ano);
 
         system("cls");
         
         if(!veri_data(mes, ano)){
             achou_erro = erro_data = 1;
         }
-        if(!(strlen(telefone) == 14)){
+        if(!(veri_telefone(telefone))){
             achou_erro = erro_telefone = 1;
         }
 
@@ -140,16 +129,6 @@ void cadastro(FILE **a, struct agenda **c, int indice){
     strcpy((*c)[indice].telefone, telefone);
 
     (*c) = (struct agenda *)realloc((*c), (indice+2)*sizeof(struct agenda));
-
-    fprintf((*a), "%d\n", indice+2);
-
-    for(int i = 0; i <= indice; i++){
-        fprintf((*a), "NOME: %s\nTELEFONE: %s\n", nome, telefone);
-        fprintf((*a), "DATA ANIVERSÁRIO: %d/%d\n", mes, ano);
-    }
-    
-
-    fclose((*a));
 }
 
 int veri_data(int mes, int ano){
@@ -168,3 +147,68 @@ int veri_data(int mes, int ano){
 
     return 1;   
 }
+
+int inicializacao(FILE **a, struct agenda **c){
+    char nome[100], telefone[15];
+    int mes, ano;
+    int qtd;
+    
+    (*a) = fopen("gravacao.txt", "r");
+    
+    if((*a) == NULL){
+        fclose((*a));
+
+        (*a) = fopen("gravacao.txt", "w");
+        
+        fprintf((*a), "%d", 1);
+
+        (*c) = (struct agenda *)malloc(sizeof(struct agenda));
+    }
+    else{
+        fscanf((*a), "%d", &qtd);
+        
+        (*c) = (struct agenda *)malloc(qtd*sizeof(struct agenda));
+
+        if(qtd != 1){
+            for(int i = 0; i < qtd; i++){
+                fscanf((*a), "%s %s %d %d", nome, telefone, &mes, &ano);
+
+                strcpy((*c)[i].nome, nome);
+                strcpy((*c)[i].telefone, telefone);
+                (*c)[i].mes = mes;
+                (*c)[i].ano = ano;
+            }    
+        }
+    }
+
+    fclose((*a));
+
+    return qtd;
+}
+
+void gravacao(FILE **a, struct agenda *c, int qtd){
+    (*a) = fopen("gravacao.txt", "w");
+
+    fprintf((*a), "%d\n", qtd);
+
+    for(int i = 0; i < qtd-1; i++){
+        fprintf((*a), "%s %s %d %d\n", c[i].nome, c[i].telefone, c[i].mes, c[i].ano);
+    }
+
+    fclose((*a));
+}
+
+int veri_telefone(char telefone[]){
+    if(!(strlen(telefone) == 18)){
+        return 0;
+    }
+    if(telefone[0] != '(' || telefone[3] != ')'){
+        return 0;
+    }
+    if(telefone[13] != '-'){
+        return 0;
+    }
+
+    return 1;
+}
+
