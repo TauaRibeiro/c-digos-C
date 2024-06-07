@@ -14,7 +14,7 @@ struct agenda{
 void gravacao(FILE **a, struct agenda *c, int qtd);
 int inicializacao(FILE **a, struct agenda **c);
 void cadastro(struct agenda **c, int indice);
-void remocao(struct agenda **c);
+void remocao(struct agenda **c, int qtd);
 void linha(const char *tipo, int tamanho);
 
 int main(){
@@ -34,12 +34,12 @@ int main(){
             printf("ESCOLHA UMA DAS OPÇÕES ABAIXO:");
             linha("-", 30);
             printf("1- Inserir contato;\n2- Remover contato;\n3- Pesquisar contato;\n");
-            printf("4- Listar contatos;\n5- Imprimir aniversário do mês;");
+            printf("4- Listar contatos;\n5- Imprimir aniversário do mês;\n6- Sair;");
             linha("-", 30);
             printf("Digite o número da opção desejada: ");
             scanf("%d", &decisao);
 
-            if(decisao <= 5 && decisao >= 1){
+            if(decisao <= 6 && decisao >= 1){
                 linha("=-", 25);
 
                 break;
@@ -61,8 +61,20 @@ int main(){
                 printf("Cadastro realizado com sucesso!!");
 
             break;
+            case 2:
+            	remocao(&contato, qtd_contatos);
+            	
+            	qtd_contatos--;
+            	
+            	gravacao(&arquivo, contato, qtd_contatos);
+            	
+            	printf("Remoção realizada com sucesso!!!");
+            break;
+            case 5:
+            	fim = 1;
+            break;
         }
-    }while(fim);
+    }while(!fim);
 
     return 0;
 }
@@ -95,7 +107,7 @@ void cadastro(struct agenda **c, int indice){
         fflush(stdin);
         
         linha("-", 30);
-        printf("Digite o número de telefone de %s [(xx) x xxxxxx-xxxx]: ", nome);
+        printf("Digite o número de telefone de %s [(xx) x xxxx-xxxx]: ", nome);
         fscanf(stdin, " %19[^\n]", telefone);
 
         fflush(stdin);
@@ -149,7 +161,7 @@ int veri_data(int mes, int ano){
 }
 
 int inicializacao(FILE **a, struct agenda **c){
-    char nome[100], telefone[15];
+    char nome[100], telefone[12];
     int mes, ano;
     int qtd;
     
@@ -199,16 +211,55 @@ void gravacao(FILE **a, struct agenda *c, int qtd){
 }
 
 int veri_telefone(char telefone[]){
-    if(!(strlen(telefone) == 18)){
+    if(!(strlen(telefone) == 16)){
         return 0;
     }
     if(telefone[0] != '(' || telefone[3] != ')'){
         return 0;
     }
-    if(telefone[13] != '-'){
+    if(telefone[12] != '-'){
         return 0;
     }
 
     return 1;
 }
 
+void remocao(struct agenda **c, int qtd){
+	char nome[100], comp_nome[100];
+	int achou = 0;
+	
+	printf("Digite o nome do contato a ser removido: ");
+	scanf(" %99[^\n]", nome);
+	
+	for(int i = 0; i < strlen(nome); i++){
+		nome[i] = tolower(nome[i]);
+	}
+	
+	for(int i = 0; i < qtd; i++){
+		strcpy(comp_nome, (*c)[i].nome);
+		
+		for(int x = 0; i < strlen(comp_nome); i++){
+			comp_nome[i] = tolower(comp_nome[i]);
+		}
+		
+		if(strcmp(nome, comp_nome) == 0){
+			if(qtd == 2){
+				free((*c));
+				
+				(*c) = (struct agenda *)malloc(sizeof(struct agenda));
+			}
+			else{
+				for(int x = i; x < qtd; x++){
+					strcpy((*c)[x].nome, (*c)[x+1].nome);
+					strcpy((*c)[x].telefone, (*c)[x+1].telefone);
+					(*c)[x].mes = (*c)[x+1].mes;
+					(*c)[x].ano = (*c)[x+1].ano;
+				}
+				
+				(*c) = (struct agenda *)realloc((*c), qtd*sizeof(struct agenda));
+			}
+			
+		}
+	}
+	
+}
