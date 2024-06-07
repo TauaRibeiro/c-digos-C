@@ -8,7 +8,7 @@
 
 struct agenda{
     int mes, ano;
-    char telefone[19], nome[100];
+    char telefone[18], nome[100];
 };
 
 void gravacao(FILE **a, struct agenda *c, int qtd);
@@ -16,6 +16,7 @@ int inicializacao(FILE **a, struct agenda **c);
 void cadastro(struct agenda **c, int indice);
 void remocao(struct agenda **c, int qtd);
 void linha(const char *tipo, int tamanho);
+void procura(struct agenda *c, char nome[], int qtd);
 
 int main(){
     system("cls");
@@ -23,8 +24,9 @@ int main(){
 
     FILE *arquivo;
     struct agenda *contato;
+    char nome[100];
     int decisao, qtd_contatos;
-    int fim = 0;
+    int loop = 0;
 
     qtd_contatos = inicializacao(&arquivo, &contato);
 
@@ -70,11 +72,18 @@ int main(){
             	
             	printf("Remoção realizada com sucesso!!!");
             break;
-            case 5:
-            	fim = 1;
+            case 3:
+            	printf("Digite o nome da pessoa a procurar");
+            	scanf(" %99[^\n]", nome);
+            	
+            	procura(contato, nome, qtd_contatos);
+            break;
+            case 6:
+            	printf("ok");
+            	loop = 0;
             break;
         }
-    }while(!fim);
+    }while(loop);
 
     return 0;
 }
@@ -108,7 +117,7 @@ void cadastro(struct agenda **c, int indice){
         
         linha("-", 30);
         printf("Digite o número de telefone de %s [(xx) x xxxx-xxxx]: ", nome);
-        fscanf(stdin, " %19[^\n]", telefone);
+        fscanf(stdin, " %17[^\n]", telefone);
 
         fflush(stdin);
 
@@ -134,6 +143,18 @@ void cadastro(struct agenda **c, int indice){
         printf("%s", (erro_telefone) ? "\nNúmero de telefone inválido..." : "");
 
     }while(1);
+    
+    for(int i = 0; i < strlen(nome); i++){
+    	if(nome[i] == ' '){
+    		nome[i] = '!';
+		}
+	}
+	
+	for(int i = 0; i < 16; i++){
+		if(telefone[i] == ' '){
+			telefone[i] = '!';
+		}
+	}
 
     (*c)[indice].ano = ano;
     (*c)[indice].mes = mes;
@@ -184,6 +205,9 @@ int inicializacao(FILE **a, struct agenda **c){
         if(qtd != 1){
             for(int i = 0; i < qtd; i++){
                 fscanf((*a), "%s %s %d %d", nome, telefone, &mes, &ano);
+                
+                for(int i = 0; i < str){
+				}
 
                 strcpy((*c)[i].nome, nome);
                 strcpy((*c)[i].telefone, telefone);
@@ -211,14 +235,17 @@ void gravacao(FILE **a, struct agenda *c, int qtd){
 }
 
 int veri_telefone(char telefone[]){
-    if(!(strlen(telefone) == 16)){
+    if(strlen(telefone) != 16){
+    	printf("COMPRIMENTO\n");
         return 0;
     }
     if(telefone[0] != '(' || telefone[3] != ')'){
-        return 0;
+        printf("PARENTESES\n");
+		return 0;
     }
-    if(telefone[12] != '-'){
-        return 0;
+    if(telefone[11] != '-'){
+        printf("HIFEN\n");
+		return 0;
     }
 
     return 1;
@@ -263,3 +290,19 @@ void remocao(struct agenda **c, int qtd){
 	}
 	
 }
+
+void procura(struct agenda *c, char nome[], int qtd){
+	int achou = 0;
+	
+	for(int  i = 0; i < strlen(nome); i++){
+		nome[i] = tolower(nome[i]);
+	}
+	
+	for(int i = 0; i < qtd; i++){
+		if(strcmp(nome, c[i].nome)){
+			linha("=+", 25);
+			printf("NOME: %s\nTELEFONE: %s\nDATA ANIVERSÁRIO: %.2d/%d", c[i].nome, c[i].telefone, c[i].mes, c[i].ano);
+		}
+	}
+}
+
