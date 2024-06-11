@@ -20,6 +20,8 @@ void procura(struct agenda *c, char nome[], int qtd);
 int veri_data(int mes, int ano);
 int veri_telefone(char telefone[]);
 
+int cont_espacos(char teste[]);
+
 int main(){
     system("cls");
     setlocale(LC_ALL, "Portuguese");
@@ -166,9 +168,7 @@ void cadastro(struct agenda **c, int indice){
     (*c)[indice].mes = mes;
     strcpy((*c)[indice].nome, nome);
     strcpy((*c)[indice].telefone, telefone);
-
-    printf("ok\n");
-
+	
     (*c) = (struct agenda *)realloc((*c), (indice+2)*sizeof(struct agenda));
 }
 
@@ -251,7 +251,7 @@ void gravacao(FILE **a, struct agenda *c, int qtd){
             }
         }
         
-        for(int x = 0; nome[x] != '\0'; x++){
+        for(int x = 0; telefone[x] != '\0'; x++){
             if(telefone[x] == ' '){
                 telefone[x] = '!';
             }
