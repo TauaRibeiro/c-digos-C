@@ -305,16 +305,75 @@ void AtualizarProduto(lis_produtos *lis){
         return;
     }
 
-    int id;
+    int id, escolha;
+    int achou = 0;
 
     printf("Digite o id do produto que deseja atualizar: ");
     scanf("%d", &id);
 
     if(id > id_produto){
         printf("Produto não encontrado...\n");
+
+        return;
+    }
+    
+    produto *aux = lis->inicio;
+
+    do{
+        if(aux->identificacao == id){
+            achou = 1;
+
+            break;
+        }
+        else{
+            aux = aux->proximo;
+        }
+    }while(aux != NULL);
+
+    if(!achou){
+        printf("Produto não encontrado...\n");
+
+        return;
     }
 
+    ImprimirLinha("=", 50);
+    Formatar("O QUE DESEJA ATUALIZAR ?", 25, ' ', '^');
+    ImprimirLinha("=", 50);
+    printf("1. Nome\n");
+    printf("2. Preço\n");
+    printf("3. Quantidade\n");
+    printf("4. Tipo\n");
+    ImprimirLinha("-", 50);
+    printf("Digite o número da opção desejada: ");
+    scanf("%d", &escolha);
+
+    system("cls");
+
+    switch(escolha){
+        case 1:
+            printf("Digite o novo nome: ");
+            scanf(" %29[^\n]s", aux->nome);
+        break;
+        case 2:
+            printf("Digite o novo preço: R$ ");
+            scanf("%f", &aux->preco);
+        break;
+        case 3:
+            printf("Digite a nova quantdade: ");
+            scanf("%d", &aux->quantidade);
+        break;
+        case 4:
+            printf("Digite o novo tipo do produto: ");
+            scanf(" %29[^\n]s", aux->tipo);
+        break;
+        default:
+            printf("Escolha inválida...\n");
+
+            return;
+        break;
+    }
     
+    printf("Produto atualizado com sucesso!!\n");
 }
 
 //Fução responsável por atualizar um cliente cadastrado
@@ -482,6 +541,65 @@ void DeletarCliente(arv_cliente *arv){
     printf("Cliente deletado com sucesso!!\n");
 }
 
+//Função responsável por deletar um produto
+void DeletarProduto(lista_produtos *lis){
+    if(lis->inicio == NULL){
+        printf("Não há produtos para deletar...\n");
+
+        return;
+    }
+
+    int id;
+
+    printf("Digite o id do produto que deseja deletar: ");
+    scanf("%d", &id);
+
+    if(id > id_produto){
+        printf("Produto não encontrado...\n");
+
+        return;
+    }
+
+    produto *aux = lis->inicio;
+
+    do{
+        if(aux->identificacao == id){
+            break;
+        }
+        
+        aux = aux->proximo;
+    }while(aux != NULL);
+
+    if(aux == NULL){
+        printf("Produto não encontrado...\n");
+
+        return;
+    }
+
+    if(aux->anterior == aux->proximo){
+        lis->inicio = NULL;
+        lis->fim = NULL;
+    }
+    else if(aux->anterior == NULL){
+        aux->proximo->anterior = NULL;
+
+        lis->inicio = aux->proximo;
+    }
+    else if(aux->proximo == NULL){
+        aux->anterior->proximo = NULL;
+
+        lis->fim = aux->anterior;
+    }
+    else{
+        aux->anterior->proximo = aux->proximo;
+        aux->proximo->anterior = aux->anterior;
+    }
+
+    free(aux);
+
+    printf("Produto deletado com sucesso!!\n");
+}
+
 /*Função responsável por efetuar o login
 retorna 1 caso o login ocorreu com sucesso
 caso contrário, retorna 0*/
@@ -594,6 +712,10 @@ int main(){
                                     CadastrarProdutos(produtos);
                                 break;
                                 case 2:
+                                    AtualizarProduto(produtos);
+                                break;
+                                case 3:
+                                    DeletarProduto(produtos);
                                 break;
                                 case 4:
                                     MostrarProdutos(produtos);
