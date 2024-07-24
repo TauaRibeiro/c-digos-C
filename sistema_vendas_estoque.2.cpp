@@ -15,6 +15,9 @@ Criar um novo sistema de vendas e estoque melhorado usando os conhecimentos apre
 3- Gravar os dados (atualizados) em um arquivo para que seja possível armazenar as informações
 */
 
+/*ANOTAÇÕES:
+PRECISO CORRIGIR O PROBLEMA DA COMPRA DE ITENS
+*/
 
 //Constante para o máximo de caracteres
 #define MAX_CARACTERES 30
@@ -42,7 +45,9 @@ struct produto{
 };
 //Estrutura que armazena os dados dos pedidos do cliente
 struct pedido{
-    struct produto produto_pedido;
+    int quantidade_pedida;
+    float preco;
+    char produto_pedido[MAX_CARACTERES];
 
     struct pedido *proximo;
     struct pedido *anterior;
@@ -59,6 +64,7 @@ struct lista_produtos{
 //Lista que armazena o início e fim da lista de compras de um usuário
 struct carrinho{
     char nome[MAX_CARACTERES];
+    float total;
 
     struct pedido *inicio;
     struct pedido *fim;
@@ -69,7 +75,7 @@ typedef struct produto produto;
 typedef struct pedido pedido;
 typedef struct arvore_cliente arv_cliente;
 typedef struct lista_produtos lis_produtos;
-typedef struct carrinho carrinho;
+typedef struct carrinho lis_carrinho;
 
 int id_produto = 1;
 
@@ -144,9 +150,19 @@ arv_cliente *CriarArvoreCliente(){
     return novo;
 }
 
-//Função responsável por criar a árvore de dados dos produtos
+//Função responsável por criar a lista de dados dos produtos
 lis_produtos *CriarListaProdutos(){
     lis_produtos *novo = (lis_produtos *)malloc(sizeof(lis_produtos));
+
+    novo->inicio = NULL;
+    novo->fim = NULL;
+
+    return novo;
+}
+
+//Função responsável por criar a lista de dados do carrinho
+carrinho *CriarCarrinho(){
+    carrinho *novo = (carrinho *)malloc(sizeof(carrinho));
 
     novo->inicio = NULL;
     novo->fim = NULL;
@@ -295,6 +311,35 @@ void MostrarClientes(arv_cliente *arv, cliente *no){
     MostrarClientes(arv, no->esquerda);
 
     MostrarClientes(arv, no->direita);
+}
+
+//Função responsável por mostrar todo o conteúdo do carrinho
+void MostrarCarrinho(carrinho *car){
+    if(car->inicio == NULL){
+        printf("Não foi feito nenhuma compra...\n");
+
+        return;
+    }
+
+    pedido *aux = car->inicio;
+
+    ImprimirLinha("=", 50);
+    Formatar(car->nome, 40 - strlen(car->nome), ' ', '^');
+    ImprimirLinha("-", 50);
+    Formatar("PRODUTO", 30, ' ', '<');
+    Formatar("PREÇO", 10, ' ', '<');
+    Formatar("QUANTIDADE", 10, ' ', '<');
+    printf("\n");
+    do{
+        Formatar(aux->produto_pedido, 30 - strlen(aux->produto_pedido), ' ', '<');
+        printf("R$ %.2f", aux->preco);
+        Formatar("", 10, ' ', '<');
+        printf("%d;\n", aux->quantidade_pedida);
+
+        aux = aux->proximo;
+    }while(aux != NULL);
+    ImprimirLinha("-", 50);
+    printf("TOTAL: R$ %.2f", car->total);
 }
 
 //Função responsável por atualizar um produto cadastrado
@@ -600,6 +645,121 @@ void DeletarProduto(lista_produtos *lis){
     printf("Produto deletado com sucesso!!\n");
 }
 
+//Função responsável por efetuar a compra de produtos de um determinado cliente
+void Comprar(lista_produtos *lis, arv_cliente *arv, lis_carrinho *car){
+    if(lis->inicio == NULL || arv->raiz == NULL){
+        printf("Não há produtos e/ou clientes cadastrados...\n");
+
+        return;
+    }
+
+    char cpf[11];
+    int aux_cpf, cmp_cpf, id, quantidade;
+
+    printf("Digite o CPF do cliente a realizar a compra: ");
+    scanf(" %11[^\n]s", cpf);
+
+    sscanf(cpf, "%d", &cmp_cpf);
+
+    cliente *aux_cliente = arv->raiz;
+
+    do{
+        if(strcmp(aux_cliente->cpf, cpf) == 0){
+            break;
+        }
+
+        sscanf(cpf, "%d", &aux_cpf);
+        
+        if(cmp_cpf > aux_cpf){
+            aux_cliente = aux_cliente->esquerda;
+        }
+        else{
+            aux_cliente = aux_cliente->direita;
+        }
+    }while(aux_cliente != NULL);
+
+    if(aux_cliente == NULL){
+        printf("Cliente não encontrado...\n");
+
+        return;
+    }
+
+    printf("Digite o ID do produto a ser pedido: ");
+    scanf("%d", &id);
+
+    if(id > id_produto){
+        printf("Produto não encontrado...\n");
+
+        return;
+    }
+
+    produto *aux_produto = lis->inicio;
+
+    do{
+        if(aux_produto->identificacao == id){
+            break;
+        }
+
+        aux_produto = aux_produto->proximo;
+    }while(aux_produto != NULL);
+
+    if(aux_produto == NULL){
+        printf("Produto não econtrado...\n");
+
+        return;
+    }
+
+    do{
+        printf("Digite a quantidade que deseja comprar: ");
+        scanf("%d", &quantidade);
+    }while(quantidade > aux_produto->quantidade || quantidade < 1);
+
+    aux_produto->quantidade -= quantidade;
+
+    pedido *novo = (pedido *)malloc(sizeof(pedido));
+
+    if(strcmp(car->nome, aux_cliente->nome) != 0 && car->inicio != NULL){
+        pedido *aux_pedido = car->fim;
+
+        strcpy(car->nome, aux_cliente->nome);
+
+        do{
+            car->fim = car->fim->anterior;
+
+            free(aux_pedido);
+
+            aux_pedido = car->fim;
+        }while(aux_pedido != NULL);
+
+        car->inicio = NULL;
+
+        car->total = 0;
+    }
+
+    strcpy(novo->produto_pedido, aux_produto->nome);
+    novo->quantidade_pedida = quantidade;
+    novo->preco = aux_produto->preco;
+
+    car->total += novo->preco * quantidade;
+
+    if(car->inicio == NULL){
+        novo->anterior = NULL;
+        novo->proximo = NULL;
+
+        car->inicio = novo;
+        car->fim = novo;
+    }
+    else{
+        novo->anterior = car->fim;
+        novo->proximo = NULL;
+
+        car->fim->proximo = novo;
+        car->fim = novo;
+    }
+
+    printf("Compra efetuada com sucesso!!\n");
+}
+
 /*Função responsável por efetuar o login
 retorna 1 caso o login ocorreu com sucesso
 caso contrário, retorna 0*/
@@ -633,6 +793,7 @@ int main(){
 
     arv_cliente *clientes = CriarArvoreCliente();
     lis_produtos *produtos = CriarListaProdutos();
+    lis_carrinho *carrinho = CriarCarrinho();
 
     int decisao = 1;
     do{
@@ -682,6 +843,12 @@ int main(){
                                 break;
                                 case 4:
                                     DeletarCliente(clientes);
+                                break;
+                                case 6:
+                                    Comprar(produtos, clientes, carrinho);
+                                break;
+                                case 7:
+                                    MostrarCarrinho(carrinho);
                                 break;
                                 case 8:
                                 break;
